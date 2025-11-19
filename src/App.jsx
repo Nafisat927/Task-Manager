@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useReducer } from 'react'
 import './App.css'
-import { TaskForm, TaskList } from './components'
+import { TaskContext, TaskForm, TaskList, taskReducer } from './components'
 import axios from 'axios'
 
 function App() {
   // This creates a state to track our list of tasks
   // Initalized to an empty array because we'll populate it with our API.
-  const [taskList, setTaskList] = useState([])
+  const [taskList, dispatch] = useReducer(taskReducer, [])
 
   useEffect(() => {
     // logic to run on component mount
@@ -26,11 +26,11 @@ function App() {
       const { data } = response
 
       // set the value of our state
-      setTaskList(data)
+      dispatch({ type: 'set_tasks', tasks: data })
     } catch (error) {
       console.error('Something went wrong', error)
       // if something goes wrong, set the task list back to empty
-      setTaskList([])
+      dispatch({ type: 'set_tasks', tasks: [] })
     }
   }
 
@@ -38,43 +38,19 @@ function App() {
   function deleteTask(index) {
     // the filter function returns a new array after applying the \
     // filter condition to every item in the array
-    const updatedTasks = taskList.filter((task, idx) => index !== idx)
-
-    // update our state to the new array
-    // state immutability: we must always set a state array to a new array
-    setTaskList(updatedTasks)
+  dispatch({ type: 'delete_task', index })
   }
 
   // addTask adds a task to our array with the description
   function addTask(description) {
-    // define a new task object
-    const newTask = {
-      completed: false, // new tasks are incomplete
-      description: description,
-    }
-
-    // append this task to the taskList state
-    const updatedTasks = [...taskList, newTask] // spread operator copies array
-
-    // update our state
-    setTaskList(updatedTasks)
+      dispatch({ type: 'add_task', description })
   }
 
   // updateTaskField is a helper function that updates the task at index
   // it updates the field (either description or completed) to
   // value
   function updateTaskField(index, field, value) {
-    // the map function takes an array and applies logic to every item \
-    // returning a new item for each item
-    const updatedTasks = taskList.map((task, idx) => {
-      if (index == idx) {
-        return { ...task, [field]: value }
-      }
-      return task
-    })
-
-    // update our state
-    setTaskList(updatedTasks)
+      dispatch({ type: 'update_task_field', index, field, value })
   }
 
   // updateCompleted updates the completed field of our task
@@ -89,15 +65,14 @@ function App() {
 
   // This is the render function: what visually shows in the UI
   return (
-    <>
-      <TaskForm addTask={addTask} />
-      <TaskList
-        tasks={taskList}
-        deleteTask={deleteTask}
-        updateCompleted={updateCompleted}
-        updateDescription={updateDescription}
-      />
-    </>
+    <TaskContext.Provider value = {
+      {
+        tasks: taskList, addTask, deleteTask, updateCompleted, updateDescription
+      }
+    }>
+      <TaskForm/>
+      <TaskList/>
+    </TaskContext.Provider>
   )
 }
 

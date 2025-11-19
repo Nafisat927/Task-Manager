@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import EditDescription from './EditDescription'
+import { useContext } from 'react'
+import { TaskContext, useTaskContext } from './TaskContext'
 
 /**
  * This renders a single Task
@@ -9,13 +11,11 @@ import EditDescription from './EditDescription'
 function Task({
   description = '',
   completed = false,
-  deleteTask,
   index,
-  updateCompleted,
-  updateDescription,
 }) {
   // Create a state to conditionally render the edit input
   const [editing, setEditing] = useState(false)
+  const {deleteTask, updateCompleted, updateDescription} = useTaskContext()
 
   // after editing, update the description, and then turn off editing
   const handleEdit = (index, description) => {
